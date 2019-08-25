@@ -49,13 +49,13 @@
 #include "ixheaacd_freq_sca.h"
 #include "ixheaacd_intrinsics.h"
 
-WORD32 ixheaacd_samp_rate_table[12] = {92017, 75132, 55426, 46009,
-                                       37566, 27713, 23004, 18783,
-                                       13856, 11502, 9391,  16428320};
+const WORD32 ixheaacd_samp_rate_table[12] = {92017, 75132, 55426, 46009,
+                                             37566, 27713, 23004, 18783,
+                                             13856, 11502, 9391,  16428320};
 
-WORD32 ixheaacd_v_offset_40[16] = {3 + 1, 2 + 1, 2 + 1, 2 + 1, 2 + 1, 2 + 1,
-                                   2 + 1, 2 + 1, 2 + 1, 2 + 1, 2 + 1, 2 + 1,
-                                   2 + 1, 2 + 1, 1 + 1, 0};
+const WORD32 ixheaacd_v_offset_40[16] = {
+    3 + 1, 2 + 1, 2 + 1, 2 + 1, 2 + 1, 2 + 1, 2 + 1, 2 + 1,
+    2 + 1, 2 + 1, 2 + 1, 2 + 1, 2 + 1, 2 + 1, 1 + 1, 0};
 
 static WORD32 ixheaacd_int_div(WORD32 num, WORD32 den) {
   if (den != 0) {
@@ -421,10 +421,6 @@ WORD16 ixheaacd_calc_master_frq_bnd_tbl(
 
       ixheaacd_aac_shellsort(vec_dk0, num_bands0);
 
-      if (vec_dk0[0] == 0) {
-        return -1;
-      }
-
       f_master_tbl[0] = k0;
 
       for (k = 1; k <= num_bands0; k++)
@@ -610,7 +606,7 @@ WORD32 ixheaacd_derive_noise_freq_bnd_tbl(
   kx = pstr_freq_band_data->freq_band_table[HIGH][0];
 
   if (ptr_header_data->noise_bands == 0) {
-    pstr_freq_band_data->num_nf_bands = 1;
+    temp = 1;
   } else {
     temp = pstr_common_tables->log_dual_is_table[k2] -
            pstr_common_tables->log_dual_is_table[kx];
@@ -620,13 +616,12 @@ WORD32 ixheaacd_derive_noise_freq_bnd_tbl(
     if (temp == 0) {
       temp = 1;
     }
-    pstr_freq_band_data->num_nf_bands = temp;
   }
-  pstr_freq_band_data->num_if_bands = pstr_freq_band_data->num_nf_bands;
-
-  if (pstr_freq_band_data->num_nf_bands > MAX_NOISE_COEFFS) {
+  if (temp > MAX_NOISE_COEFFS) {
     return -1;
   }
+  pstr_freq_band_data->num_nf_bands = temp;
+  pstr_freq_band_data->num_if_bands = pstr_freq_band_data->num_nf_bands;
   {
     WORD16 i_k, k;
     WORD16 num, den;

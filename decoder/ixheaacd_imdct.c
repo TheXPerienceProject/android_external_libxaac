@@ -483,13 +483,13 @@ static WORD32 ixheaacd_fd_imdct_long(ia_usac_data_struct *usac_data,
 
   for (i = 0; i < ixheaacd_drc_offset->n_long / 2; i++) {
     p_overlap_ibuffer[ixheaacd_drc_offset->n_long / 2 + i] =
-        -p_in_ibuffer[i] >> (shiftp - shift_olap);
+        ixheaacd_negate32_sat(p_in_ibuffer[i]) >> (shiftp - shift_olap);
     p_overlap_ibuffer[ixheaacd_drc_offset->n_long / 2 - i - 1] =
-        -p_in_ibuffer[i] >> (shiftp - shift_olap);
+        ixheaacd_negate32_sat(p_in_ibuffer[i]) >> (shiftp - shift_olap);
   }
 
-  ixheaacd_scale_down(p_out_ibuffer, p_out_ibuffer, ixheaacd_drc_offset->n_long,
-                      output_q, 15);
+  ixheaacd_scale_down_adj(p_out_ibuffer, p_out_ibuffer,
+                          ixheaacd_drc_offset->n_long, output_q, 15);
 
   if (td_frame_prev) {
     qfac = 1.0f / (FLOAT32)(1 << 15);

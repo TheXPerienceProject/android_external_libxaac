@@ -21,7 +21,7 @@
 #include <math.h>
 #include <string.h>
 
-#include <ixheaacd_type_def.h>
+#include "ixheaacd_type_def.h"
 #include "ixheaacd_error_standards.h"
 #include "ixheaacd_sbr_const.h"
 #include "ixheaacd_sbrdecsettings.h"
@@ -30,11 +30,9 @@
 #include "ixheaacd_drc_data_struct.h"
 #include "ixheaacd_drc_dec.h"
 #include "ixheaacd_sbrdecoder.h"
-
 #include "ixheaacd_bitbuffer.h"
-
 #include "ixheaacd_env_extr_part.h"
-#include <ixheaacd_sbr_rom.h>
+#include "ixheaacd_sbr_rom.h"
 #include "ixheaacd_common_rom.h"
 #include "ixheaacd_hybrid.h"
 #include "ixheaacd_sbr_scale.h"
@@ -780,6 +778,10 @@ WORD32 ixheaacd_sbr_env_calc(ia_sbr_frame_info_data_struct *frame_data,
   } else if (frame_data->str_frame_info_details.num_env == 2) {
     frame_data->var_len_id_prev = 1;
   }
+
+  if ((frame_data->str_frame_info_details.num_noise_env < 1) ||
+      (frame_data->str_frame_info_details.num_noise_env > 2))
+    return IA_FATAL_ERROR;
 
   for (i = 0; i < num_nf_bands; i++) {
     prev_env_noise_level[i] =

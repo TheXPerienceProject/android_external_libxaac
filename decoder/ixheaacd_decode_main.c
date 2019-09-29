@@ -19,21 +19,19 @@
 */
 #include <stdlib.h>
 #include <string.h>
-#include <ixheaacd_type_def.h>
+#include "ixheaacd_type_def.h"
 #include "ixheaacd_error_standards.h"
 #include "ixheaacd_memory_standards.h"
 #include "ixheaacd_sbrdecsettings.h"
 #include "ixheaacd_env_extr_part.h"
 #include "ixheaacd_defines.h"
-#include <ixheaacd_aac_rom.h>
+#include "ixheaacd_aac_rom.h"
 #include "ixheaacd_common_rom.h"
-#include <ixheaacd_sbr_rom.h>
+#include "ixheaacd_sbr_rom.h"
 #include "ixheaacd_bitbuffer.h"
 #include "ixheaacd_pulsedata.h"
 #include "ixheaacd_pns.h"
-
 #include "ixheaacd_lt_predict.h"
-
 #include "ixheaacd_channelinfo.h"
 #include "ixheaacd_sbr_common.h"
 #include "ixheaacd_drc_data_struct.h"
@@ -45,38 +43,27 @@
 #include "ixheaacd_latmdemux.h"
 #include "ixheaacd_aacdec.h"
 #include "ixheaacd_sbr_common.h"
-
 #include "ixheaacd_mps_polyphase.h"
 #include "ixheaacd_config.h"
 #include "ixheaacd_mps_dec.h"
-
 #include "ixheaacd_struct_def.h"
-
-#include <ixheaacd_type_def.h>
 #include "ixheaacd_bitbuffer.h"
 #include "ixheaacd_interface.h"
-
 #include "ixheaacd_tns_usac.h"
 #include "ixheaacd_cnst.h"
-
 #include "ixheaacd_acelp_info.h"
-
 #include "ixheaacd_sbrdecsettings.h"
 #include "ixheaacd_info.h"
 #include "ixheaacd_sbrdecoder.h"
 #include "ixheaacd_mps_polyphase.h"
 #include "ixheaacd_sbr_const.h"
 #include "ixheaacd_main.h"
-
 #include "ixheaacd_arith_dec.h"
-
 #include "ixheaacd_config.h"
 #include "ixheaacd_struct.h"
-
 #include "ixheaacd_create.h"
-
 #include "ixheaacd_dec_main.h"
-
+#include "ixheaacd_error_standards.h"
 VOID ixheaacd_samples_sat(WORD8 *outbuffer, WORD32 num_samples_out,
                           WORD32 pcmsize, FLOAT32 (*out_samples)[4096],
                           WORD32 *out_bytes, WORD32 num_channel_out) {
@@ -141,8 +128,7 @@ static WORD32 ixheaacd_audio_preroll_parsing(ia_dec_data_struct *pstr_dec_data,
   WORD32 num_pre_roll_frames = 0;
 
   WORD32 frame_idx = 0;
-  WORD32 frame_len[18] = {
-      0};  // max of escapedValue(2, 4, 0) i.e. 2^2 -1 + 2^4 -1;
+  WORD32 frame_len[MAX_AUDIO_PREROLLS] = {0};
   WORD32 temp = 0;
 
   WORD32 config_len = 0;
@@ -195,6 +181,8 @@ static WORD32 ixheaacd_audio_preroll_parsing(ia_dec_data_struct *pstr_dec_data,
         val_add = ixheaacd_read_bits_buf(temp_buff, 4);
         num_pre_roll_frames += val_add;
       }
+
+      if (num_pre_roll_frames > MAX_AUDIO_PREROLLS) return IA_FATAL_ERROR;
 
       for (frame_idx = 0; frame_idx < num_pre_roll_frames; frame_idx++) {
         WORD32 au_len = 0;  // escapedValued(16,16,0)
@@ -298,8 +286,8 @@ WORD32 ixheaacd_dec_main(VOID *temp_handle, WORD8 *inbuffer, WORD8 *outbuffer,
         config_len = ixheaacd_audio_preroll_parsing(pstr_dec_data, &config[0],
                                                     &preroll_units,
                                                     &preroll_frame_offset[0]);
-        if (config_len < 0) return -1;
-        if (preroll_units > (WORD)MAX_AUDIO_PREROLLS) return -1;
+
+        if (config_len == IA_FATAL_ERROR) return IA_FATAL_ERROR;
       }
 
       if (config_len != 0) {
